@@ -1,6 +1,7 @@
 package urlhandler
 
 import (
+	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/vinylSummer/microUrl/internal/services"
 	"github.com/vinylSummer/microUrl/pkg/logger"
@@ -24,4 +25,14 @@ func NewGetLongURLRoute(router *mux.Router, urlService services.URLService, logg
 func (route *GetLongURLRoute) getLongURL(writer http.ResponseWriter, request *http.Request) {
 	path := mux.Vars(request)["path"]
 	route.logger.Info("activated getLongURL handler with path %s", path)
+
+	longURL, err := route.urlService.GetLongURL(path)
+	if err != nil || longURL == "" {
+		route.logger.Error(fmt.Sprintf("couldn't get long url from %s because %v", path, err))
+		return
+	}
+
+	route.logger.Info(fmt.Sprintf("%s -> %s", path, longURL))
+
+	http.Redirect(writer, request, longURL, http.StatusPermanentRedirect)
 }
