@@ -1,7 +1,10 @@
 package app
 
-import "fmt"
+import (
+	"fmt"
+	cfg "github.com/vinylSummer/microUrl/config"
+)
 
-func Run() {
-	fmt.Println("Hello World")
+func Run(config *cfg.Config) {
+	fmt.Println(config)
 }

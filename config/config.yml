@@ -1,0 +1,15 @@
+app:
+  name: 'micro-url'
+  version: '0.0.1'
+
+http:
+  port: '8080'
+
+logger:
+  log_level: 'info'
+
+postgres:
+  url: 'postgres://postgres@localhost:5432/testDB?sslmode=disable'
+
+sqlite:
+  url: './microurl.sqlite3'

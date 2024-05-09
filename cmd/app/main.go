@@ -1,7 +1,15 @@
 package main
 
-import "github.com/vinylSummer/microUrl/internal/app"
+import (
+	cfg "github.com/vinylSummer/microUrl/config"
+	"github.com/vinylSummer/microUrl/internal/app"
+	"log"
+)
 
 func main() {
-	app.Run()
+	config, err := cfg.NewConfig()
+	if err != nil {
+		log.Fatalf("Config error: %s", err)
+	}
+	app.Run(config)
 }
