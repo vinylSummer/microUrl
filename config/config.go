@@ -2,7 +2,6 @@ package config
 
 import (
 	"fmt"
-
 	"github.com/ilyakaznacheev/cleanenv"
 )
 
@@ -37,17 +36,15 @@ type (
 	}
 )
 
+const DefaultPath = "./config/config.yml"
+
 func NewConfig() (*Config, error) {
 	config := new(Config)
 
-	err := cleanenv.ReadConfig("./config/config.yml", config)
+	// reads BOTH .yml and environ, env variables overwrite .yml ones
+	err := cleanenv.ReadConfig(DefaultPath, config)
 	if err != nil {
-		return nil, fmt.Errorf("couldn't get configurations from .yml file: %w", err)
-	}
-
-	err = cleanenv.ReadEnv(config)
-	if err != nil {
-		return nil, fmt.Errorf("couldn't get configurations from environment: %w", err)
+		return nil, fmt.Errorf("couldn't get configurations from .yml file or environ: %w", err)
 	}
 
 	return config, nil

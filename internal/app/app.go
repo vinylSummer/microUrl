@@ -1,6 +1,7 @@
 package app
 
 import (
+	"fmt"
 	"github.com/gorilla/mux"
 	cfg "github.com/vinylSummer/microUrl/config"
 	http "github.com/vinylSummer/microUrl/internal/controllers/http/api/v1"
@@ -13,6 +14,8 @@ import (
 
 func Run(config *cfg.Config) {
 	logger := log.New(config.Log.Level)
+
+	logger.Info(fmt.Sprintf("Starting MicroUrl with config:\n%#v", config))
 
 	db, err := sqlite.New(config.SQLite.URL)
 	if err != nil {
