@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en" data-bs-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <title>Micro URL</title>
+    <style>
+        .container {
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            margin-top: 5%;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container" id="form-container">
+        <center>
+            <label>
+                Enter a url<br>
+                <input type="text" id="longURLInput" placeholder="Long URL">
+            </label><br>
+
+            <button style="margin-top: 10px" class="btn btn-primary" onclick="micrify() ">Micrify</button>
+
+            <div id="resultArea"></div>
+        </center>
+    </div>
+
+    <script >
+        function micrify() {
+            const longURL = document.getElementById('longURLInput').value;
+            fetch('http://localhost:8080', {
+                method: 'POST',
+                headers: {
+                    'Access-Control-Allow-Origin': '*',
+                    'Access-Control-Allow-Headers': 'Content-Type',
+                    'Access-Control-Allow-Methods': 'POST',
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ longURL: longURL })
+            })
+            .then(response => response.json())
+            .then(data => {
+                const resultArea = document.getElementById('resultArea');
+                if (data.error_message) {
+                    resultArea.innerHTML = `<p>Error: ${data.error_message}</p>`;
+                } else {
+                    resultArea.innerHTML = `<p>Shortened URL: <a href="${data.short_url}" target="_blank">${data.short_url}</a></p>`;
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
+    </script>
+
+</body>
+</html>

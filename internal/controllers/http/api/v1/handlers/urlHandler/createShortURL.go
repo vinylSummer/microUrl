@@ -1,11 +1,11 @@
 package urlhandler
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/vinylSummer/microUrl/internal/services"
 	"github.com/vinylSummer/microUrl/pkg/logger"
-	"html/template"
 	"net/http"
 )
 
@@ -14,20 +14,18 @@ type CreateShortURLRoute struct {
 	logger     logger.Interface
 }
 
+const MainPagePath = "./views/main_page.html"
+
 func NewCreateShortURLRoute(router *mux.Router, urlService services.URLService, logger logger.Interface) {
 	route := &CreateShortURLRoute{
 		urlService: urlService,
 		logger:     logger,
 	}
 
-	router.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		tmpl := template.Must(template.ParseFiles("./internal/controllers/http/api/v1/templates/main_page.html"))
-		err := tmpl.Execute(w, nil)
-		if err != nil {
-			route.logger.Error(fmt.Errorf("couldn't execute guess_quest_piece template, %v", err))
-		}
+	router.HandleFunc("/", func(writer http.ResponseWriter, request *http.Request) {
+		http.ServeFile(writer, request, MainPagePath)
 	}).Methods("GET")
-	router.HandleFunc("/micrify", route.createShortURL).Methods("POST")
+	router.HandleFunc("/", route.createShortURL).Methods("POST", "OPTIONS")
 }
 
 func (route *CreateShortURLRoute) createShortURL(writer http.ResponseWriter, request *http.Request) {
@@ -42,35 +40,41 @@ func (route *CreateShortURLRoute) createShortURL(writer http.ResponseWriter, req
 
 	route.logger.Info("activated createShortURL handler with longURL %s", longURL)
 
-	createShortURLTemplate := template.Must(template.ParseFiles(
-		"./internal/controllers/http/api/v1/templates/main_page.html"),
-	)
-	type createShortURLPageData struct {
-		ErrorMessage string
-		ShortURL     string
+	type createShortURLData struct {
+		ErrorMessage string `json:"error_message"`
+		ShortURL     string `json:"short_url"`
 	}
 
 	shortURL, err := route.urlService.CreateShortURL(longURL)
 	if err != nil {
 		route.logger.Info("Couldn't create short url in createShortURLHandler, %v", err)
-		urlCreationFailedPageData := createShortURLPageData{
+		urlCreationFailedData := createShortURLData{
 			ErrorMessage: "Service error, please try again later :(",
 			ShortURL:     "",
 		}
-		err = createShortURLTemplate.Execute(writer, urlCreationFailedPageData)
+		err = json.NewEncoder(writer).Encode(urlCreationFailedData)
 		if err != nil {
-			route.logger.Error("Couldn't render url creation failed template, %v", err)
+			fmt.Printf(
+				"Couldn't send json encoded response %v in createShortURL handler, %v",
+				urlCreationFailedData,
+				err,
+			)
+			return
 		}
 		return
 	}
 
-	urlCreationSuccessPageData := createShortURLPageData{
+	urlCreationSuccessPageData := createShortURLData{
 		ErrorMessage: "",
 		ShortURL:     shortURL,
 	}
-	err = createShortURLTemplate.Execute(writer, urlCreationSuccessPageData)
+	err = json.NewEncoder(writer).Encode(urlCreationSuccessPageData)
 	if err != nil {
-		route.logger.Error("Couldn't render url creation success template, %v", err)
+		fmt.Printf(
+			"Couldn't send json encoded response %v in createShortURL handler, %v",
+			urlCreationSuccessPageData,
+			err,
+		)
+		return
 	}
-
 }

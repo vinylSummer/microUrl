@@ -1,9 +1,9 @@
 package dto
 
 type GetLongURLRequest struct {
-	ShortURL string `json:"short_url"`
+	ShortURL string `json:"shortURL"`
 }
 
 type GetLongURLResponse struct {
-	LongURL string `json:"long_url"`
+	LongURL string `json:"longURL"`
 }
