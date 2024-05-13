@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	models "github.com/vinylSummer/microUrl/internal/models/url"
 	"github.com/vinylSummer/microUrl/internal/repositories"
 	"log"
 	"math/rand/v2"
@@ -50,8 +51,8 @@ func (service *URLService) generateShortURL() (string, error) {
 	return shortURL, nil
 }
 
-func (service *URLService) GetLongURL(shortURL string) (string, error) {
-	longURL, err := service.urlRepo.GetLongURL(shortURL, context.Background())
+func (service *URLService) GetLongURL(shortURL *models.ShortURL) (string, error) {
+	longURL, err := service.urlRepo.GetLongURL(shortURL.Value, context.Background())
 	if err != nil {
 		return "", err
 	}
@@ -59,13 +60,13 @@ func (service *URLService) GetLongURL(shortURL string) (string, error) {
 	return longURL, nil
 }
 
-func (service *URLService) CreateShortURL(longURL string) (string, error) {
+func (service *URLService) CreateShortURL(longURL *models.LongURL) (string, error) {
 	shortURL, err := service.generateShortURL()
 	if err != nil {
 		return "", err
 	}
 
-	err = service.urlRepo.StoreURLsBinding(longURL, shortURL, context.Background())
+	err = service.urlRepo.StoreURLsBinding(longURL.Value, shortURL, context.Background())
 	if err != nil {
 		return "", err
 	}

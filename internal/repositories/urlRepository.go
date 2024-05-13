@@ -1,6 +1,8 @@
 package repositories
 
-import "context"
+import (
+	"context"
+)
 
 type URLRepository interface {
 	StoreURLsBinding(longURL string, shortURL string, ctx context.Context) error

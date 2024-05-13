@@ -4,8 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/gorilla/mux"
+	"github.com/vinylSummer/microUrl/internal/controllers/http/api/v1/handlers/urlHandler/dto"
 	"github.com/vinylSummer/microUrl/internal/services"
 	"github.com/vinylSummer/microUrl/pkg/logger"
+	"io"
 	"net/http"
 )
 
@@ -24,31 +26,35 @@ func NewCreateShortURLRoute(router *mux.Router, urlService services.URLService, 
 
 	router.HandleFunc("/", func(writer http.ResponseWriter, request *http.Request) {
 		http.ServeFile(writer, request, MainPagePath)
-	}).Methods("GET")
+	}).Methods("GET", "OPTIONS")
 	router.HandleFunc("/", route.createShortURL).Methods("POST", "OPTIONS")
 }
 
 func (route *CreateShortURLRoute) createShortURL(writer http.ResponseWriter, request *http.Request) {
-	err := request.ParseForm()
-	if err != nil {
-		writer.WriteHeader(http.StatusInternalServerError)
-		route.logger.Info("Couldn't parse form in createShortURLHandler, %v", err)
+	if request.Method != http.MethodPost {
+		fmt.Println("only POST method is allowed")
 		return
 	}
 
-	longURL := request.PostFormValue("longURL")
-
-	route.logger.Info("activated createShortURL handler with longURL %s", longURL)
-
-	type createShortURLData struct {
-		ErrorMessage string `json:"error_message"`
-		ShortURL     string `json:"short_url"`
+	body, err := io.ReadAll(request.Body)
+	if err != nil {
+		fmt.Println("Couldn't read request body")
+		return
 	}
 
-	shortURL, err := route.urlService.CreateShortURL(longURL)
+	var createShortURLRequest dto.CreateShortURLRequest
+	err = json.Unmarshal(body, &createShortURLRequest)
+	if err != nil {
+		fmt.Println("Couldn't unmarshal request body")
+		return
+	}
+
+	route.logger.Info("activated createShortURL handler with longURL %s", createShortURLRequest.LongURL)
+
+	shortURL, err := route.urlService.CreateShortURL(createShortURLRequest.ToModel())
 	if err != nil {
 		route.logger.Info("Couldn't create short url in createShortURLHandler, %v", err)
-		urlCreationFailedData := createShortURLData{
+		urlCreationFailedData := dto.CreateShortURLResponse{
 			ErrorMessage: "Service error, please try again later :(",
 			ShortURL:     "",
 		}
@@ -64,7 +70,7 @@ func (route *CreateShortURLRoute) createShortURL(writer http.ResponseWriter, req
 		return
 	}
 
-	urlCreationSuccessPageData := createShortURLData{
+	urlCreationSuccessPageData := dto.CreateShortURLResponse{
 		ErrorMessage: "",
 		ShortURL:     shortURL,
 	}

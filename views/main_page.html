@@ -21,7 +21,7 @@
         <center>
             <label>
                 Enter a url<br>
-                <input type="text" id="longURLInput" placeholder="Long URL">
+                <input type="text" id="longURLInput" placeholder="Long URL" required>
             </label><br>
 
             <button style="margin-top: 10px" class="btn btn-primary" onclick="micrify() ">Micrify</button>
@@ -33,15 +33,21 @@
     <script >
         function micrify() {
             const longURL = document.getElementById('longURLInput').value;
+            console.log(longURL)
+            console.log(JSON.stringify({ LongURL: longURL }))
+            if (longURL === "") {
+                console.error("Empty input field")
+                return
+            }
             fetch('http://localhost:8080', {
                 method: 'POST',
                 headers: {
                     'Access-Control-Allow-Origin': '*',
-                    'Access-Control-Allow-Headers': 'Content-Type',
-                    'Access-Control-Allow-Methods': 'POST',
+                    'Access-Control-Allow-Headers': '*',
+                    'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ longURL: longURL })
+                body: JSON.stringify({ long_url: longURL })
             })
             .then(response => response.json())
             .then(data => {

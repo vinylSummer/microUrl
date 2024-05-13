@@ -7,7 +7,8 @@ type CreateShortURLRequest struct {
 }
 
 type CreateShortURLResponse struct {
-	ShortURL string `json:"short_url"`
+	ShortURL     string `json:"short_url"`
+	ErrorMessage string `json:"error_message"`
 }
 
 func (request *CreateShortURLRequest) ToModel() *models.LongURL {
