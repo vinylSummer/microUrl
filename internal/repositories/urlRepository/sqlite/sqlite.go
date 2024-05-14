@@ -5,9 +5,9 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/rs/zerolog/log"
 	models "github.com/vinylSummer/microUrl/internal/models/url"
 	"github.com/vinylSummer/microUrl/pkg/sqlite"
-	"log"
 )
 
 type ErrURLNotFound struct {
@@ -30,26 +30,26 @@ func (repo *URLRepository) StoreURLsBinding(context ctx.Context, binding *models
 	transaction, err := repo.Connection.DB.BeginTx(context, nil)
 	defer transaction.Rollback()
 	if err != nil {
-		log.Printf("Couldn't begin transaction in StoreURLsBinding: %v", err)
+		log.Error().Err(err).Msg("Couldn't begin transaction")
 		return err
 	}
 
 	statement, err := transaction.Prepare("INSERT INTO url_bindings (short_url, long_url) VALUES (?, ?)")
 	defer statement.Close()
 	if err != nil {
-		log.Printf("Couldn't prepare statement in StoreURLsBinding: %v", err)
+		log.Error().Err(err).Msg("Couldn't prepare statement")
 		return err
 	}
 
 	_, err = statement.Exec(binding.ShortURL, binding.LongURL)
 	if err != nil {
-		log.Printf("Couldn't execute statement in StoreURLsBinding: %v", err)
+		log.Error().Err(err).Msg("Couldn't execute statement")
 		return err
 	}
 
 	err = transaction.Commit()
 	if err != nil {
-		log.Printf("Couldn't commit transaction in StoreURLsBinding: %v", err)
+		log.Error().Err(err).Msg("Couldn't commit transaction")
 		return err
 	}
 
@@ -59,7 +59,7 @@ func (repo *URLRepository) StoreURLsBinding(context ctx.Context, binding *models
 func (repo *URLRepository) GetLongURL(context ctx.Context, shortURL string) (string, error) {
 	statement, err := repo.Connection.DB.Prepare("SELECT long_url FROM url_bindings WHERE short_url = ?")
 	if err != nil {
-		log.Printf("Couldn't prepare statement in GetLongURL: %v", err)
+		log.Error().Err(err).Msg("Couldn't prepare statement")
 		return "", err
 	}
 	defer statement.Close()
@@ -67,14 +67,15 @@ func (repo *URLRepository) GetLongURL(context ctx.Context, shortURL string) (str
 	var longURL string
 	err = statement.QueryRowContext(context, shortURL).Scan(&longURL)
 	if errors.Is(err, sql.ErrNoRows) {
-		log.Printf("Couldn't find long URL for %s in the database: %v", shortURL, err)
+		log.Error().Err(err).Msg(fmt.Sprintf("Couldn't find long URL for %s in the database", shortURL))
 		return "", &ErrURLNotFound{URL: shortURL}
 	}
 	if err != nil {
-		log.Printf("Couldn't execute statement in GetLongURL: %v", err)
+		log.Error().Err(err).Msg("Couldn't execute statement")
 		return "", err
 	}
-	log.Printf("Retrieved long URL: %s for short URL: %s", longURL, shortURL)
+
+	log.Info().Msg(fmt.Sprintf("Retrieved long URL: %s for short URL: %s", longURL, shortURL))
 
 	return longURL, nil
 }
@@ -82,7 +83,7 @@ func (repo *URLRepository) GetLongURL(context ctx.Context, shortURL string) (str
 func (repo *URLRepository) CheckUnique(context ctx.Context, shortURL string) (bool, error) {
 	statement, err := repo.Connection.DB.Prepare("SELECT id FROM url_bindings WHERE short_url = ?")
 	if err != nil {
-		log.Printf("Couldn't prepare statement in GetLongURL: %v", err)
+		log.Error().Err(err).Msg("Couldn't prepare statement")
 		return false, err
 	}
 	defer statement.Close()
@@ -90,11 +91,11 @@ func (repo *URLRepository) CheckUnique(context ctx.Context, shortURL string) (bo
 	var id uint
 	err = statement.QueryRowContext(context, shortURL).Scan(&id)
 	if errors.Is(err, sql.ErrNoRows) {
-		log.Printf("Couldn't find long URL for %s in the database: %v", shortURL, err)
+		log.Error().Err(err).Msg(fmt.Sprintf("Couldn't find long URL for %s in the database", shortURL))
 		return true, nil
 	}
 	if err != nil {
-		log.Printf("Couldn't execute statement in GetLongURL: %v", err)
+		log.Error().Err(err).Msg("Couldn't execute statement")
 		return false, err
 	}
 	return false, nil

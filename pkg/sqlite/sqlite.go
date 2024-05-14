@@ -3,7 +3,7 @@ package sqlite
 import (
 	"database/sql"
 	_ "github.com/mattn/go-sqlite3"
-	"log"
+	"github.com/rs/zerolog/log"
 )
 
 type Connection struct {
@@ -21,7 +21,7 @@ func createTables(db *sql.DB) {
 
 	_, err := db.Exec(createURLBindingsTable)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatal().Err(err)
 	}
 
 }
@@ -31,7 +31,6 @@ func New(url string) (*Connection, error) {
 	if err != nil {
 		return nil, err
 	}
-	log.Printf("Connected to database at %s\n", url)
 
 	createTables(db)
 

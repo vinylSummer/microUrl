@@ -1,7 +1,6 @@
 package config
 
 import (
-	"fmt"
 	"github.com/ilyakaznacheev/cleanenv"
 )
 
@@ -24,7 +23,7 @@ type (
 	}
 
 	Log struct {
-		Level string `env-required:"true" yaml:"log_level"   env:"LOG_LEVEL"`
+		Level string `env-required:"true"  yaml:"log_level"   env:"LOG_LEVEL"`
 	}
 
 	Postgres struct {
@@ -44,7 +43,7 @@ func NewConfig() (*Config, error) {
 	// reads BOTH .yml and environ, env variables overwrite .yml ones
 	err := cleanenv.ReadConfig(DefaultPath, config)
 	if err != nil {
-		return nil, fmt.Errorf("couldn't get configurations from .yml file or environ: %w", err)
+		return nil, err
 	}
 
 	return config, nil

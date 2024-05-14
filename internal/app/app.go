@@ -1,15 +1,17 @@
 package app
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/gorilla/mux"
+	"github.com/rs/zerolog/log"
 	cfg "github.com/vinylSummer/microUrl/config"
 	http "github.com/vinylSummer/microUrl/internal/controllers/http/api/v1"
 	"github.com/vinylSummer/microUrl/internal/controllers/http/api/v1/middleware"
 	sqliteRepo "github.com/vinylSummer/microUrl/internal/repositories/urlRepository/sqlite"
-	"github.com/vinylSummer/microUrl/internal/services/v1"
+	v1 "github.com/vinylSummer/microUrl/internal/services/v1"
 	"github.com/vinylSummer/microUrl/pkg/httpServer"
-	log "github.com/vinylSummer/microUrl/pkg/logger"
+	"github.com/vinylSummer/microUrl/pkg/logger"
 	"github.com/vinylSummer/microUrl/pkg/sqlite"
 	"os"
 	sig "os/signal"
@@ -17,15 +19,17 @@ import (
 )
 
 func Run(config *cfg.Config) {
-	logger := log.New(config.Log.Level)
+	logger.NewLogger(config)
 
-	fmt.Println(fmt.Sprintf("Starting MicroUrl with config:\n%#v", config))
+	prettyConfig, _ := json.MarshalIndent(config, "", "  ")
+	log.Info().Msg(fmt.Sprintf("Starting MicroUrl with config:\n%+v", string(prettyConfig)))
 
 	db, err := sqlite.New(config.SQLite.URL)
 	if err != nil {
-		logger.Fatal(err)
+		log.Fatal().Err(err).Msg("Could not connect to database")
 	}
 	defer db.Close()
+	log.Info().Msg("Successfully connected to the database")
 
 	urlRepo := sqliteRepo.New(db)
 
@@ -34,26 +38,28 @@ func Run(config *cfg.Config) {
 	handler := mux.NewRouter()
 	handler.Use(middleware.CORS)
 
-	http.NewRouter(handler, *urlService, logger)
+	http.NewRouter(handler, *urlService)
 	server := httpServer.New(
 		handler,
 		httpServer.Port(config.HTTP.Port),
 	)
-	fmt.Println("Serving at http://127.0.0.1:8080")
+
+	log.Info().Msg(fmt.Sprintf("Serving at http://127.0.0.1:%s", config.HTTP.Port))
 
 	interrupt := make(chan os.Signal, 1)
 	sig.Notify(interrupt, os.Interrupt, syscall.SIGTERM)
 
 	select {
 	case signal := <-interrupt:
-		fmt.Println("Got signal: " + signal.String())
+		log.Info().Msg(fmt.Sprintf("Caught signal %v", signal))
 	case err = <-server.Notify():
-		fmt.Println("Got error: " + err.Error())
+		log.Error().Err(err).Msg("An error occurred while serving requests")
 	}
 
-	fmt.Println("Shutting down the server..")
+	log.Info().Msg("Shutting down the server..")
+
 	err = server.Shutdown()
 	if err != nil {
-		logger.Error(fmt.Errorf("error shutting down http server: %w", err))
+		log.Error().Err(err).Msg("Could not shut down the server")
 	}
 }

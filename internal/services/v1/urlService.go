@@ -2,9 +2,10 @@ package v1
 
 import (
 	ctx "context"
+	"fmt"
+	"github.com/rs/zerolog/log"
 	models "github.com/vinylSummer/microUrl/internal/models/url"
 	"github.com/vinylSummer/microUrl/internal/repositories"
-	"log"
 	"math/rand/v2"
 )
 
@@ -31,7 +32,7 @@ func (service *URLService) generateUniqueString(context ctx.Context, length int)
 
 		isUnique, err := service.urlRepo.CheckUnique(context, randomCharactersString)
 		if err != nil {
-			log.Printf("Error while checking if url is unique: %s", err)
+			log.Error().Err(err).Msg(fmt.Sprintf("Error while checking if URL %s is unique", randomCharactersString))
 			continue
 		}
 		if isUnique {

@@ -3,21 +3,19 @@ package urlhandler
 import (
 	"fmt"
 	"github.com/gorilla/mux"
+	"github.com/rs/zerolog/log"
 	"github.com/vinylSummer/microUrl/internal/controllers/http/api/v1/handlers/urlHandler/dto"
 	"github.com/vinylSummer/microUrl/internal/services/v1"
-	"github.com/vinylSummer/microUrl/pkg/logger"
 	"net/http"
 )
 
 type GetLongURLRoute struct {
 	urlService v1.URLService
-	logger     logger.Interface
 }
 
-func NewGetLongURLRoute(router *mux.Router, urlService v1.URLService, logger logger.Interface) {
+func NewGetLongURLRoute(router *mux.Router, urlService v1.URLService) {
 	route := &GetLongURLRoute{
 		urlService: urlService,
-		logger:     logger,
 	}
 
 	router.HandleFunc("/{path:[a-zA-Z0-9]+}", route.getLongURL).Methods("GET")
@@ -25,18 +23,18 @@ func NewGetLongURLRoute(router *mux.Router, urlService v1.URLService, logger log
 
 func (route *GetLongURLRoute) getLongURL(writer http.ResponseWriter, request *http.Request) {
 	path := mux.Vars(request)["path"]
-	route.logger.Info("activated getLongURL handler with path %s", path)
+	//route.logger.Info("activated getLongURL handler with path %s", path)
 
 	getLongURLRequest := dto.GetLongURLRequest{
 		ShortURL: path,
 	}
 	longURL, err := route.urlService.GetLongURL(request.Context(), getLongURLRequest.ToModel())
 	if err != nil || longURL == "" {
-		route.logger.Error(fmt.Sprintf("couldn't get long url from %s because %v", path, err))
+		log.Error().Err(err).Msg(fmt.Sprintf("couldn't get long url from %s", path))
 		return
 	}
 
-	route.logger.Info(fmt.Sprintf("%s -> %s", path, longURL))
+	log.Info().Msg(fmt.Sprintf("Resolved %s -> %s", path, longURL))
 
 	http.Redirect(writer, request, longURL, http.StatusPermanentRedirect)
 }
