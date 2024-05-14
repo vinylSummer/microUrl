@@ -5,20 +5,20 @@ import (
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/vinylSummer/microUrl/internal/controllers/http/api/v1/handlers/urlHandler/dto"
-	"github.com/vinylSummer/microUrl/internal/services"
+	"github.com/vinylSummer/microUrl/internal/services/v1"
 	"github.com/vinylSummer/microUrl/pkg/logger"
 	"io"
 	"net/http"
 )
 
 type CreateShortURLRoute struct {
-	urlService services.URLService
+	urlService v1.URLService
 	logger     logger.Interface
 }
 
 const MainPagePath = "./views/main_page.html"
 
-func NewCreateShortURLRoute(router *mux.Router, urlService services.URLService, logger logger.Interface) {
+func NewCreateShortURLRoute(router *mux.Router, urlService v1.URLService, logger logger.Interface) {
 	route := &CreateShortURLRoute{
 		urlService: urlService,
 		logger:     logger,
@@ -51,7 +51,7 @@ func (route *CreateShortURLRoute) createShortURL(writer http.ResponseWriter, req
 
 	route.logger.Info("activated createShortURL handler with longURL %s", createShortURLRequest.LongURL)
 
-	shortURL, err := route.urlService.CreateShortURL(createShortURLRequest.ToModel())
+	URLBinding, err := route.urlService.CreateShortURL(request.Context(), createShortURLRequest.ToModel())
 	if err != nil {
 		route.logger.Info("Couldn't create short url in createShortURLHandler, %v", err)
 		urlCreationFailedData := dto.CreateShortURLResponse{
@@ -72,7 +72,7 @@ func (route *CreateShortURLRoute) createShortURL(writer http.ResponseWriter, req
 
 	urlCreationSuccessPageData := dto.CreateShortURLResponse{
 		ErrorMessage: "",
-		ShortURL:     shortURL,
+		ShortURL:     URLBinding.ShortURL,
 	}
 	err = json.NewEncoder(writer).Encode(urlCreationSuccessPageData)
 	if err != nil {

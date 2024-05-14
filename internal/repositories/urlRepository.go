@@ -1,11 +1,12 @@
 package repositories
 
 import (
-	"context"
+	ctx "context"
+	models "github.com/vinylSummer/microUrl/internal/models/url"
 )
 
 type URLRepository interface {
-	StoreURLsBinding(longURL string, shortURL string, ctx context.Context) error
-	GetLongURL(shortURL string, ctx context.Context) (string, error)
-	CheckUnique(shortURL string) (bool, error)
+	StoreURLsBinding(context ctx.Context, binding *models.URLBinding) error
+	GetLongURL(context ctx.Context, shortURL string) (string, error)
+	CheckUnique(context ctx.Context, shortURL string) (bool, error)
 }

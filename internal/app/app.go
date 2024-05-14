@@ -7,7 +7,7 @@ import (
 	http "github.com/vinylSummer/microUrl/internal/controllers/http/api/v1"
 	"github.com/vinylSummer/microUrl/internal/controllers/http/api/v1/middleware"
 	sqliteRepo "github.com/vinylSummer/microUrl/internal/repositories/urlRepository/sqlite"
-	"github.com/vinylSummer/microUrl/internal/services"
+	"github.com/vinylSummer/microUrl/internal/services/v1"
 	"github.com/vinylSummer/microUrl/pkg/httpServer"
 	log "github.com/vinylSummer/microUrl/pkg/logger"
 	"github.com/vinylSummer/microUrl/pkg/sqlite"
@@ -29,7 +29,7 @@ func Run(config *cfg.Config) {
 
 	urlRepo := sqliteRepo.New(db)
 
-	urlService := services.NewURLService(urlRepo)
+	urlService := v1.NewURLService(urlRepo)
 
 	handler := mux.NewRouter()
 	handler.Use(middleware.CORS)

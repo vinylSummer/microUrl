@@ -4,17 +4,17 @@ import (
 	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/vinylSummer/microUrl/internal/controllers/http/api/v1/handlers/urlHandler/dto"
-	"github.com/vinylSummer/microUrl/internal/services"
+	"github.com/vinylSummer/microUrl/internal/services/v1"
 	"github.com/vinylSummer/microUrl/pkg/logger"
 	"net/http"
 )
 
 type GetLongURLRoute struct {
-	urlService services.URLService
+	urlService v1.URLService
 	logger     logger.Interface
 }
 
-func NewGetLongURLRoute(router *mux.Router, urlService services.URLService, logger logger.Interface) {
+func NewGetLongURLRoute(router *mux.Router, urlService v1.URLService, logger logger.Interface) {
 	route := &GetLongURLRoute{
 		urlService: urlService,
 		logger:     logger,
@@ -30,7 +30,7 @@ func (route *GetLongURLRoute) getLongURL(writer http.ResponseWriter, request *ht
 	getLongURLRequest := dto.GetLongURLRequest{
 		ShortURL: path,
 	}
-	longURL, err := route.urlService.GetLongURL(getLongURLRequest.ToModel())
+	longURL, err := route.urlService.GetLongURL(request.Context(), getLongURLRequest.ToModel())
 	if err != nil || longURL == "" {
 		route.logger.Error(fmt.Sprintf("couldn't get long url from %s because %v", path, err))
 		return
