@@ -1,7 +1,6 @@
 package urlhandler
 
 import (
-	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/rs/zerolog/log"
 	"github.com/vinylSummer/microUrl/internal/controllers/http/api/v1/handlers/urlHandler/dto"
@@ -23,18 +22,18 @@ func NewGetLongURLRoute(router *mux.Router, urlService v1.URLService) {
 
 func (route *GetLongURLRoute) getLongURL(writer http.ResponseWriter, request *http.Request) {
 	path := mux.Vars(request)["path"]
-	//route.logger.Info("activated getLongURL handler with path %s", path)
+	log.Trace().Msgf("activated getLongURL handler with path %s", path)
 
 	getLongURLRequest := dto.GetLongURLRequest{
 		ShortURL: path,
 	}
 	longURL, err := route.urlService.GetLongURL(request.Context(), getLongURLRequest.ToModel())
 	if err != nil || longURL == "" {
-		log.Error().Err(err).Msg(fmt.Sprintf("couldn't get long url from %s", path))
+		log.Error().Err(err).Msgf("couldn't get long url from %s", path)
 		return
 	}
 
-	log.Info().Msg(fmt.Sprintf("Resolved %s -> %s", path, longURL))
+	log.Info().Msgf("Resolved %s -> %s", path, longURL)
 
 	http.Redirect(writer, request, longURL, http.StatusPermanentRedirect)
 }

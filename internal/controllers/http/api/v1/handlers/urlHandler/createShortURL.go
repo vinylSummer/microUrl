@@ -2,7 +2,6 @@ package urlhandler
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/rs/zerolog/log"
 	"github.com/vinylSummer/microUrl/internal/controllers/http/api/v1/handlers/urlHandler/dto"
@@ -30,7 +29,7 @@ func NewCreateShortURLRoute(router *mux.Router, urlService v1.URLService) {
 
 func (route *CreateShortURLRoute) createShortURL(writer http.ResponseWriter, request *http.Request) {
 	if request.Method != http.MethodPost {
-		log.Warn().Msg(fmt.Sprintf("Rejected %s request from %s", request.Method, request.RemoteAddr))
+		log.Warn().Msgf("Rejected %s request from %s", request.Method, request.RemoteAddr)
 		return
 	}
 
@@ -47,7 +46,7 @@ func (route *CreateShortURLRoute) createShortURL(writer http.ResponseWriter, req
 		return
 	}
 
-	log.Trace().Msg(fmt.Sprintf("activated createShortURL handler with longURL %s", createShortURLRequest.LongURL))
+	log.Trace().Msgf("activated createShortURL handler with longURL %s", createShortURLRequest.LongURL)
 
 	URLBinding, err := route.urlService.CreateShortURL(request.Context(), createShortURLRequest.ToModel())
 	if err != nil {

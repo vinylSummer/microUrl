@@ -2,7 +2,6 @@ package app
 
 import (
 	"encoding/json"
-	"fmt"
 	"github.com/gorilla/mux"
 	"github.com/rs/zerolog/log"
 	cfg "github.com/vinylSummer/microUrl/config"
@@ -22,7 +21,7 @@ func Run(config *cfg.Config) {
 	logger.NewLogger(config)
 
 	prettyConfig, _ := json.MarshalIndent(config, "", "  ")
-	log.Info().Msg(fmt.Sprintf("Starting MicroUrl with config:\n%+v", string(prettyConfig)))
+	log.Info().Msgf("Starting MicroUrl with config:\n%+v", string(prettyConfig))
 
 	db, err := sqlite.New(config.SQLite.URL)
 	if err != nil {
@@ -44,14 +43,14 @@ func Run(config *cfg.Config) {
 		httpServer.Port(config.HTTP.Port),
 	)
 
-	log.Info().Msg(fmt.Sprintf("Serving at http://127.0.0.1:%s", config.HTTP.Port))
+	log.Info().Msgf("Serving at http://127.0.0.1:%s", config.HTTP.Port)
 
 	interrupt := make(chan os.Signal, 1)
 	sig.Notify(interrupt, os.Interrupt, syscall.SIGTERM)
 
 	select {
 	case signal := <-interrupt:
-		log.Info().Msg(fmt.Sprintf("Caught signal %v", signal))
+		log.Info().Msgf("Caught signal %v", signal)
 	case err = <-server.Notify():
 		log.Error().Err(err).Msg("An error occurred while serving requests")
 	}

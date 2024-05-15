@@ -67,7 +67,7 @@ func (repo *URLRepository) GetLongURL(context ctx.Context, shortURL string) (str
 	var longURL string
 	err = statement.QueryRowContext(context, shortURL).Scan(&longURL)
 	if errors.Is(err, sql.ErrNoRows) {
-		log.Error().Err(err).Msg(fmt.Sprintf("Couldn't find long URL for %s in the database", shortURL))
+		log.Error().Err(err).Msgf("Couldn't find long URL for %s in the database", shortURL)
 		return "", &ErrURLNotFound{URL: shortURL}
 	}
 	if err != nil {
@@ -75,7 +75,7 @@ func (repo *URLRepository) GetLongURL(context ctx.Context, shortURL string) (str
 		return "", err
 	}
 
-	log.Info().Msg(fmt.Sprintf("Retrieved long URL: %s for short URL: %s", longURL, shortURL))
+	log.Info().Msgf("Retrieved long URL: %s for short URL: %s", longURL, shortURL)
 
 	return longURL, nil
 }
@@ -91,7 +91,6 @@ func (repo *URLRepository) CheckUnique(context ctx.Context, shortURL string) (bo
 	var id uint
 	err = statement.QueryRowContext(context, shortURL).Scan(&id)
 	if errors.Is(err, sql.ErrNoRows) {
-		log.Error().Err(err).Msg(fmt.Sprintf("Couldn't find long URL for %s in the database", shortURL))
 		return true, nil
 	}
 	if err != nil {
