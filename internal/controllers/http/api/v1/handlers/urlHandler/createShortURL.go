@@ -23,8 +23,8 @@ func NewCreateShortURLRoute(router *mux.Router, urlService v1.URLService) {
 
 	router.HandleFunc("/", func(writer http.ResponseWriter, request *http.Request) {
 		http.ServeFile(writer, request, MainPagePath)
-	}).Methods("GET", "OPTIONS")
-	router.HandleFunc("/", route.createShortURL).Methods("POST", "OPTIONS")
+	}).Methods(http.MethodGet, http.MethodOptions)
+	router.HandleFunc("/", route.createShortURL).Methods(http.MethodPost, http.MethodOptions)
 }
 
 func (route *CreateShortURLRoute) createShortURL(writer http.ResponseWriter, request *http.Request) {

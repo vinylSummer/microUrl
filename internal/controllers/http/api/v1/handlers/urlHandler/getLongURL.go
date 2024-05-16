@@ -17,7 +17,7 @@ func NewGetLongURLRoute(router *mux.Router, urlService v1.URLService) {
 		urlService: urlService,
 	}
 
-	router.HandleFunc("/{path:[a-zA-Z0-9]+}", route.getLongURL).Methods("GET")
+	router.HandleFunc("/{path:[a-zA-Z0-9]+}", route.getLongURL).Methods(http.MethodGet, http.MethodOptions)
 }
 
 func (route *GetLongURLRoute) getLongURL(writer http.ResponseWriter, request *http.Request) {
