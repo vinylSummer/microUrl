@@ -7,10 +7,12 @@ import (
 	cfg "github.com/vinylSummer/microUrl/config"
 	http "github.com/vinylSummer/microUrl/internal/controllers/http/api/v1"
 	"github.com/vinylSummer/microUrl/internal/controllers/http/api/v1/middleware"
+	redisRepo "github.com/vinylSummer/microUrl/internal/repositories/cacheRepository"
 	sqliteRepo "github.com/vinylSummer/microUrl/internal/repositories/urlRepository/sqlite"
 	v1 "github.com/vinylSummer/microUrl/internal/services/v1"
 	"github.com/vinylSummer/microUrl/pkg/httpServer"
 	"github.com/vinylSummer/microUrl/pkg/logger"
+	"github.com/vinylSummer/microUrl/pkg/redis"
 	"github.com/vinylSummer/microUrl/pkg/sqlite"
 	"os"
 	sig "os/signal"
@@ -30,9 +32,17 @@ func Run(config *cfg.Config) {
 	defer db.Close()
 	log.Info().Msg("Successfully connected to the database")
 
-	urlRepo := sqliteRepo.New(db)
+	cache, err := redis.New(config)
+	if err != nil {
+		log.Fatal().Err(err).Msg("Could not connect to cache db")
+	}
+	defer cache.Close()
+	log.Info().Msg("Successfully connected to the cache db")
 
-	urlService := v1.NewURLService(urlRepo)
+	urlRepo := sqliteRepo.New(db)
+	cacheRepo := redisRepo.New(cache)
+
+	urlService := v1.NewURLService(urlRepo, cacheRepo)
 
 	handler := mux.NewRouter()
 	handler.Use(middleware.CORS)

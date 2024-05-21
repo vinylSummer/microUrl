@@ -11,6 +11,7 @@ type (
 		Log      `yaml:"logger"`
 		Postgres `yaml:"postgres"`
 		SQLite   `yaml:"sqlite"`
+		Redis    `yaml:"redis"`
 	}
 
 	App struct {
@@ -32,6 +33,10 @@ type (
 
 	SQLite struct {
 		URL string `env-required:"true" yaml:"url" env:"SQLITE_URL"`
+	}
+
+	Redis struct {
+		URL string `env-required:"true" yaml:"url" env:"REDIS_URL"`
 	}
 )
 

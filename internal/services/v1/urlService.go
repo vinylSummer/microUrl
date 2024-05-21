@@ -2,19 +2,23 @@ package v1
 
 import (
 	ctx "context"
+	"errors"
 	"github.com/rs/zerolog/log"
 	models "github.com/vinylSummer/microUrl/internal/models/url"
 	"github.com/vinylSummer/microUrl/internal/repositories"
 	"math/rand/v2"
+	"time"
 )
 
 type URLService struct {
-	urlRepo repositories.URLRepository
+	urlRepo   repositories.URLRepository
+	cacheRepo repositories.CacheRepository
 }
 
-func NewURLService(urlRepo repositories.URLRepository) *URLService {
+func NewURLService(urlRepo repositories.URLRepository, cacheRepo repositories.CacheRepository) *URLService {
 	return &URLService{
-		urlRepo: urlRepo,
+		urlRepo:   urlRepo,
+		cacheRepo: cacheRepo,
 	}
 }
 
@@ -53,12 +57,41 @@ func (service *URLService) generateShortURL(context ctx.Context) (string, error)
 }
 
 func (service *URLService) GetLongURL(context ctx.Context, shortURL *models.ShortURL) (string, error) {
-	longURL, err := service.urlRepo.GetLongURL(context, shortURL.Value)
+	longURL, err := service.getCachedLongURL(context, shortURL)
+	if err != nil || longURL == "" {
+		longURL, err = service.urlRepo.GetLongURL(context, shortURL.Value)
+		if err != nil {
+			return "", err
+		}
+
+		urlsBinding, err := service.urlRepo.GetURLsBinding(context, shortURL.Value)
+		if err != nil {
+			log.Error().Err(err).Msgf("Error while fetching urls binding for short URL %s", shortURL)
+		}
+
+		err = service.cacheURLBinding(context, urlsBinding)
+		if err != nil {
+			log.Error().Err(err).Msgf("Error while trying to cache URLs binding: %s -> %s", shortURL, urlsBinding.LongURL)
+		}
+	}
+
+	return longURL, nil
+}
+
+func (service *URLService) getCachedLongURL(context ctx.Context, shortURL *models.ShortURL) (string, error) {
+	longURL, err := service.cacheRepo.Get(context, shortURL.Value)
 	if err != nil {
 		return "", err
 	}
 
-	return longURL, nil
+	longURLString, ok := longURL.(string)
+	if !ok {
+		return "", errors.New("cached longURL is not a string")
+	}
+
+	log.Info().Msgf("Retrieved longURL: %s from cache", longURLString)
+
+	return longURLString, nil
 }
 
 func (service *URLService) CreateShortURL(context ctx.Context, longURL *models.LongURL) (*models.URLBinding, error) {
@@ -78,4 +111,12 @@ func (service *URLService) CreateShortURL(context ctx.Context, longURL *models.L
 	}
 
 	return urlBinding, nil
+}
+
+func (service *URLService) cacheURLBinding(context ctx.Context, binding *models.URLBinding) error {
+	err := service.cacheRepo.Set(context, binding.ShortURL, binding.LongURL, time.Hour*1)
+	if err != nil {
+		return err
+	}
+	return nil
 }

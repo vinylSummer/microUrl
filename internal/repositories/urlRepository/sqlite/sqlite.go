@@ -5,9 +5,11 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	_ "github.com/mattn/go-sqlite3"
 	"github.com/rs/zerolog/log"
 	models "github.com/vinylSummer/microUrl/internal/models/url"
 	"github.com/vinylSummer/microUrl/pkg/sqlite"
+	"time"
 )
 
 type ErrURLNotFound struct {
@@ -41,6 +43,7 @@ func (repo *URLRepository) StoreURLsBinding(context ctx.Context, binding *models
 		return err
 	}
 
+	// TODO: if unique constraint fails - return custom err with existing short URL
 	_, err = statement.Exec(binding.ShortURL, binding.LongURL)
 	if err != nil {
 		log.Error().Err(err).Msg("Couldn't execute statement")
@@ -54,6 +57,39 @@ func (repo *URLRepository) StoreURLsBinding(context ctx.Context, binding *models
 	}
 
 	return nil
+}
+
+func (repo *URLRepository) GetURLsBinding(context ctx.Context, shortURL string) (*models.URLBinding, error) {
+	statement, err := repo.Connection.DB.Prepare("SELECT id, long_url, created_at FROM url_bindings WHERE short_url = ?")
+	if err != nil {
+		log.Error().Err(err).Msg("Couldn't prepare statement")
+		return nil, err
+	}
+	defer statement.Close()
+
+	var id uint
+	var longURL string
+	var createdAtString string
+	err = statement.QueryRowContext(context, shortURL).Scan(&id, &longURL, &createdAtString)
+	if errors.Is(err, sql.ErrNoRows) {
+		log.Error().Err(err).Msgf("Couldn't find long URL for %s in the database", shortURL)
+		return nil, &ErrURLNotFound{URL: shortURL}
+	}
+	if err != nil {
+		log.Error().Err(err).Msg("Couldn't execute statement")
+		return nil, err
+	}
+
+	createdAt, err := time.Parse(time.RFC3339, createdAtString)
+
+	log.Info().Msgf("Retrieved the url binding for short URL: %s", shortURL)
+
+	return &models.URLBinding{
+		ID:        id,
+		LongURL:   longURL,
+		ShortURL:  shortURL,
+		CreatedAt: createdAt,
+	}, nil
 }
 
 func (repo *URLRepository) GetLongURL(context ctx.Context, shortURL string) (string, error) {
