@@ -53,7 +53,7 @@
                 if (data.error_message) {
                     resultArea.innerHTML = `<p>Error: ${data.error_message}</p>`;
                 } else {
-                    resultArea.innerHTML = `<p>Shortened URL: <a href="${data.short_url}" target="_blank">${data.short_url}</a></p>`;
+                    resultArea.innerHTML = `<p>Shortened URL: <a href="http://127.0.0.1:8080/${data.short_url}">${data.short_url}</a></p>`;
                 }
             })
             .catch(error => console.error('Error:', error));

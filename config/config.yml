@@ -12,7 +12,7 @@ postgres:
   url: 'postgres://postgres@localhost:5432/testDB?sslmode=disable'
 
 sqlite:
-  url: './microurl.sqlite3'
+  url: './microURL.sqlite3'
 
 redis:
   url: 'redis://redis@localhost:6379/0?protocol=3'
