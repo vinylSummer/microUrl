@@ -116,6 +116,29 @@ func (repo *URLRepository) GetLongURL(context ctx.Context, shortURL string) (str
 	return longURL, nil
 }
 
+func (repo *URLRepository) GetShortURL(context ctx.Context, longURL string) (string, error) {
+	statement, err := repo.Connection.DB.Prepare("SELECT short_url FROM url_bindings WHERE long_url = ?")
+	if err != nil {
+		log.Error().Err(err).Msg("Couldn't prepare statement")
+		return "", err
+	}
+	defer statement.Close()
+
+	var shortURL string
+	err = statement.QueryRowContext(context, longURL).Scan(&shortURL)
+	if errors.Is(err, sql.ErrNoRows) {
+		return "", &ErrURLNotFound{URL: shortURL}
+	}
+	if err != nil {
+		log.Error().Err(err).Msg("Couldn't execute statement")
+		return "", err
+	}
+
+	log.Info().Msgf("Retrieved short URL: %s for long URL: %s", shortURL, longURL)
+
+	return shortURL, nil
+}
+
 func (repo *URLRepository) CheckUnique(context ctx.Context, shortURL string) (bool, error) {
 	statement, err := repo.Connection.DB.Prepare("SELECT id FROM url_bindings WHERE short_url = ?")
 	if err != nil {

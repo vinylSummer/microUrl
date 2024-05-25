@@ -7,6 +7,7 @@ import (
 	"github.com/rs/zerolog/log"
 	models "github.com/vinylSummer/microUrl/internal/models/url"
 	"github.com/vinylSummer/microUrl/internal/repositories"
+	"github.com/vinylSummer/microUrl/internal/repositories/urlRepository/sqlite"
 	"math/rand/v2"
 	"time"
 )
@@ -101,9 +102,17 @@ func (service *URLService) getCachedLongURL(context ctx.Context, shortURL *model
 }
 
 func (service *URLService) CreateShortURL(context ctx.Context, longURL *models.LongURL) (*models.URLBinding, error) {
-	shortURL, err := service.generateShortURL(context)
-	if err != nil {
+	shortURL, err := service.urlRepo.GetShortURL(context, longURL.Value)
+	if err != nil && !errors.As(err, &sqlite.ErrURLNotFound{}) {
 		return nil, err
+	}
+	if shortURL != "" {
+		urlBinding := &models.URLBinding{
+			ShortURL: shortURL,
+			LongURL:  longURL.Value,
+		}
+
+		return urlBinding, nil
 	}
 
 	urlBinding := &models.URLBinding{
