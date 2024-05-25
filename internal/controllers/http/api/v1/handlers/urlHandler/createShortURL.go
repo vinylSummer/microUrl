@@ -14,8 +14,6 @@ type CreateShortURLRoute struct {
 	urlService v1.URLService
 }
 
-const MainPagePath = "./views/main_page.html"
-
 func NewCreateShortURLRoute(router *mux.Router, urlService v1.URLService) {
 	route := &CreateShortURLRoute{
 		urlService: urlService,
