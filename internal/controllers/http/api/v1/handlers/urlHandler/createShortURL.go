@@ -25,11 +25,6 @@ func NewCreateShortURLRoute(router *mux.Router, urlService v1.URLService) {
 }
 
 func (route *CreateShortURLRoute) createShortURL(writer http.ResponseWriter, request *http.Request) {
-	if request.Method != http.MethodPost {
-		log.Warn().Msgf("Rejected %s request from %s", request.Method, request.RemoteAddr)
-		return
-	}
-
 	body, err := io.ReadAll(request.Body)
 	if err != nil {
 		log.Error().Err(err).Msg("Couldn't read request body")
