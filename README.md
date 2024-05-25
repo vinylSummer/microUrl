@@ -2,11 +2,11 @@
 The one URL shortener to rule them all
 
 ## Usage
-1. Run the migrations
+1. Run the migrations using [goose](https://github.com/pressly/goose)
 
-For example, using SQLite:
+SQLite:
 ```shell
-goose -dir migrations/sqlite3 ./microURL.sqlite3 up
+goose -dir migrations/sqlite/ sqlite3 ./microURL.sqlite3 up
 ```
 2. Start the backend
 ```shell
