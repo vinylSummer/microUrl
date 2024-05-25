@@ -3,6 +3,7 @@ package v1
 import (
 	ctx "context"
 	"errors"
+	"fmt"
 	"github.com/rs/zerolog/log"
 	models "github.com/vinylSummer/microUrl/internal/models/url"
 	"github.com/vinylSummer/microUrl/internal/repositories"
@@ -23,10 +24,11 @@ func NewURLService(urlRepo repositories.URLRepository, cacheRepo repositories.Ca
 }
 
 // TODO: rewrite for better scaling
-func (service *URLService) generateUniqueString(context ctx.Context, length int) string {
+func (service *URLService) generateUniqueString(context ctx.Context, length int) (string, error) {
 	var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789")
 
-	for {
+	maxRetries := 5
+	for range maxRetries {
 		randomCharacters := make([]rune, length)
 		for i := range randomCharacters {
 			randomCharacters[i] = letters[rand.IntN(len(letters))]
@@ -39,9 +41,10 @@ func (service *URLService) generateUniqueString(context ctx.Context, length int)
 			continue
 		}
 		if isUnique {
-			return randomCharactersString
+			return randomCharactersString, nil
 		}
 	}
+	return "", fmt.Errorf("couldn't generate unique string in %s retries", maxRetries)
 }
 
 func randRange(min, max int) int {
@@ -49,9 +52,12 @@ func randRange(min, max int) int {
 }
 
 func (service *URLService) generateShortURL(context ctx.Context) (string, error) {
-	URLLength := randRange(1, 7)
+	URLLength := randRange(3, 7)
 
-	shortURL := service.generateUniqueString(context, URLLength)
+	shortURL, err := service.generateUniqueString(context, URLLength)
+	if err != nil {
+		return "", err
+	}
 
 	return shortURL, nil
 }
