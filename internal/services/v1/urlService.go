@@ -103,7 +103,8 @@ func (service *URLService) getCachedLongURL(context ctx.Context, shortURL *model
 
 func (service *URLService) CreateShortURL(context ctx.Context, longURL *models.LongURL) (*models.URLBinding, error) {
 	shortURL, err := service.urlRepo.GetShortURL(context, longURL.Value)
-	if err != nil && !errors.As(err, &sqlite.ErrURLNotFound{}) {
+	var urlNotFoundErr *sqlite.ErrURLNotFound
+	if err != nil && !errors.As(err, &urlNotFoundErr) {
 		return nil, err
 	}
 	if shortURL != "" {

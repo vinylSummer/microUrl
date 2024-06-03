@@ -1,0 +1,90 @@
+definitions:
+  dto.CreateShortURLRequest:
+    properties:
+      long_url:
+        type: string
+    type: object
+  dto.CreateShortURLResponse:
+    properties:
+      error_message:
+        type: string
+      short_url:
+        type: string
+    type: object
+  dto.GetLongURLResponse:
+    properties:
+      error_message:
+        type: string
+      long_url:
+        type: string
+    type: object
+info:
+  contact: {}
+  description: Shorten your URLs
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  title: microURL API
+  version: "1.0"
+paths:
+  /:
+    post:
+      consumes:
+      - application/json
+      description: Generate a unique short URL for a user provided long URL
+      parameters:
+      - description: Long URL
+        in: body
+        name: url
+        required: true
+        schema:
+          $ref: '#/definitions/dto.CreateShortURLRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/dto.CreateShortURLResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.CreateShortURLResponse'
+      summary: Create a short URL
+      tags:
+      - URLs
+  /{url}:
+    get:
+      consumes:
+      - application/json
+      description: When a user sends a request with a short URL, they should be redirected
+        to the corresponding long URL
+      parameters:
+      - description: Short URL
+        in: path
+        name: url
+        required: true
+        type: string
+      produces:
+      - text/html
+      responses:
+        "301":
+          description: Moved Permanently
+          headers:
+            Location:
+              description: Long URL for the provided short URL
+              type: string
+          schema:
+            type: html
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/dto.GetLongURLResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/dto.GetLongURLResponse'
+      summary: Redirect to long URL
+      tags:
+      - URLs
+swagger: "2.0"

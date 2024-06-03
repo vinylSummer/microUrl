@@ -22,6 +22,15 @@ func NewCreateShortURLRoute(router *mux.Router, urlService v1.URLService) {
 	router.HandleFunc("/", route.createShortURL).Methods(http.MethodPost, http.MethodOptions)
 }
 
+// @Summary Create a short URL
+// @Description Generate a unique short URL for a user provided long URL
+// @Tags URLs
+// @Accept json
+// @Produce json
+// @Param url body dto.CreateShortURLRequest true "Long URL"
+// @Success 201 {object} dto.CreateShortURLResponse
+// @Failure 500 {object} dto.CreateShortURLResponse
+// @Router / [post]
 func (route *CreateShortURLRoute) createShortURL(writer http.ResponseWriter, request *http.Request) {
 	body, err := io.ReadAll(request.Body)
 	if err != nil {
@@ -45,6 +54,7 @@ func (route *CreateShortURLRoute) createShortURL(writer http.ResponseWriter, req
 			ErrorMessage: "Service error, please try again later :(",
 			ShortURL:     "",
 		}
+		writer.WriteHeader(http.StatusInternalServerError)
 		err = json.NewEncoder(writer).Encode(urlCreationFailedData)
 		if err != nil {
 			log.Error().Err(err).Msg("Couldn't send json encoded response")
@@ -57,6 +67,7 @@ func (route *CreateShortURLRoute) createShortURL(writer http.ResponseWriter, req
 		ErrorMessage: "",
 		ShortURL:     URLBinding.ShortURL,
 	}
+	writer.WriteHeader(http.StatusCreated)
 	err = json.NewEncoder(writer).Encode(urlCreationSuccessPageData)
 	if err != nil {
 		log.Error().Err(err).Msg("Couldn't send json encoded response")
